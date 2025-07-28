@@ -4,6 +4,13 @@ from pymongo import MongoClient
 from pydantic import BaseModel
 from datetime import datetime
 from bson import ObjectId
+import os
+
+# ======== LOAD MONGODB URI FROM ENV (SET THIS IN RENDER) ========
+uri = os.getenv("MONGODB_URI")
+
+if not uri:
+    raise Exception("MONGODB_URI environment variable is not set!")
 
 app = FastAPI()
 
@@ -17,7 +24,6 @@ app.add_middleware(
 )
 
 # ======== CONNECT TO MONGODB ========
-uri = "mongodb+srv://moneira:4tqxYrl0sLpm6L0F@dfisaudi.e7wbnvh.mongodb.net/?retryWrites=true&w=majority&appName=DFISaudi"
 try:
     client = MongoClient(uri)
     sfda_collection = client['SFDA']['SFDA_drugs']
@@ -27,6 +33,7 @@ try:
     print("Connected to MongoDB successfully")
 except Exception as e:
     print("MongoDB connection error:", e)
+    raise e
 
 # ======== AUTOCOMPLETE ============
 @app.get("/autocomplete")
@@ -110,7 +117,7 @@ def add_medication(med: Medication):
             "drug_scientific_name": med.scientific_name,
             "drug_duration_start_date": start_date,
             "drug_duration_end_date": end_date,
-            "processed": 0  # required field default value
+            "processed": 0
         }
         result = user_collection.insert_one(doc)
         print(f"DEBUG: Medication inserted with ID: {result.inserted_id}")
@@ -139,15 +146,12 @@ def delete_medication(data: dict = Body(...)):
         if not med_id:
             return {"error": "Medication _id is required for deletion."}
 
-        # Find medication info before deletion (for interaction query)
         med_doc = user_collection.find_one({"_id": ObjectId(med_id)})
         if not med_doc:
             return {"error": "No matching medication found."}
 
-        # Delete medication
         med_result = user_collection.delete_one({"_id": ObjectId(med_id)})
         if med_result.deleted_count == 1:
-            # Delete related interactions
             trade_name = med_doc.get("drug_trade_name")
             user_id = med_doc.get("user_id")
             inter_result = interactions_collection.delete_many({
@@ -166,4 +170,4 @@ def delete_medication(data: dict = Body(...)):
 # ======== ENTRY POINT (REQUIRED FOR RENDER) ============
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
