@@ -162,3 +162,8 @@ def delete_medication(data: dict = Body(...)):
     except Exception as e:
         print("Error deleting medication:", e)
         return {"error": str(e)}
+
+# ======== ENTRY POINT (REQUIRED FOR RENDER) ============
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
