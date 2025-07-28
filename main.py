@@ -2,7 +2,7 @@ from fastapi import FastAPI, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 import os
 
@@ -165,6 +165,24 @@ def delete_medication(data: dict = Body(...)):
         return {"message": "No matching medication found."}
     except Exception as e:
         print("Error deleting medication:", e)
+        return {"error": str(e)}
+
+# ======== CHECK ACTIVE INTERACTIONS (NEW ENDPOINT) ============
+@app.get("/user/{user_id}/has-interactions")
+def has_interactions(user_id: str):
+    try:
+        today = datetime.now(timezone.utc)
+        query = {
+            "user_id": user_id,
+            "$or": [
+                {"drug_duration_end_date": None},
+                {"drug_duration_end_date": {"$gte": today}}
+            ]
+        }
+        count = interactions_collection.count_documents(query)
+        return {"hasInteractions": count > 0}
+    except Exception as e:
+        print("Error checking interactions:", e)
         return {"error": str(e)}
 
 # ======== ENTRY POINT (REQUIRED FOR RENDER) ============
