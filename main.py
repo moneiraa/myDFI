@@ -119,7 +119,7 @@ def add_medication(med: Medication):
             "drug_scientific_name": med.scientific_name,
             "drug_duration_start_date": start_date,
             "drug_duration_end_date": end_date,
-            "processed": 0
+            "processed": 0,
             "integrated": med.integrated
         }
             try:
