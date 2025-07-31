@@ -8,7 +8,6 @@ import os
 
 # ======== LOAD MONGODB URI FROM ENV (SET THIS IN RENDER) ========
 uri = os.getenv("MONGODB_URI")
-
 if not uri:
     raise Exception("MONGODB_URI environment variable is not set!")
 
@@ -113,7 +112,7 @@ def add_medication(med: Medication):
             return {"error": "Start date cannot be after end date."}
 
         doc = {
-            "user_id": med.user_id,
+            "user_id": str(med.user_id),
             "sfda_drug_id": med.sfda_drug_id,
             "drug_trade_name": med.trade_name,
             "drug_scientific_name": med.scientific_name,
@@ -122,29 +121,6 @@ def add_medication(med: Medication):
             "processed": 0,
             "integrated": med.integrated
         }
-        try:
-        # Split duration into start and end dates safely
-        parts = med.duration.split(" - ") if med.duration else []
-        start_date = datetime.utcnow() if not parts or not parts[0].strip() else datetime.strptime(parts[0].strip(), "%d/%m/%Y")
-        end_date = None
-        if len(parts) > 1 and parts[1].strip() and parts[1].strip().lower() != "ongoing":
-            end_date = datetime.strptime(parts[1].strip(), "%d/%m/%Y")
-
-        # Validate dates
-        if end_date is not None and start_date > end_date:
-            return {"error": "Start date cannot be after end date."}
-
-        # Document to insert
-        doc = {
-            "user_id": med.user_id,
-            "sfda_drug_id": med.sfda_drug_id,
-            "drug_trade_name": med.trade_name,
-            "drug_scientific_name": med.scientific_name,
-            "drug_duration_start_date": start_date,
-            "drug_duration_end_date": end_date,
-            "processed": 0,
-            "integrated": med.integrated  # <-- required by Mongo schema
-        }
 
         result = user_collection.insert_one(doc)
         print(f"DEBUG: Medication inserted with ID: {result.inserted_id}")
@@ -152,10 +128,9 @@ def add_medication(med: Medication):
 
     except Exception as e:
         import traceback
-        traceback.print_exc()  # full error log
+        traceback.print_exc()
         print("Error inserting medication:", e)
         return {"error": str(e)}
-
 
 # ======== GET MEDICATIONS ============
 @app.get("/get_medications")
