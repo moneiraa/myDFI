@@ -120,6 +120,7 @@ def add_medication(med: Medication):
             "drug_duration_start_date": start_date,
             "drug_duration_end_date": end_date,
             "processed": 0
+            "integrated": med.integrated
         }
         result = user_collection.insert_one(doc)
         print(f"DEBUG: Medication inserted with ID: {result.inserted_id}")
