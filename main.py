@@ -91,7 +91,7 @@ class Medication(BaseModel):
     scientific_name: str
     duration: str
     user_id: str = "1"
-    "integrated": False
+    integrated: bool = False
 
 
 @app.post("/add_medication")
