@@ -122,7 +122,7 @@ def add_medication(med: Medication):
             "processed": 0,
             "integrated": med.integrated
         }
-            try:
+        try:
         # Split duration into start and end dates safely
         parts = med.duration.split(" - ") if med.duration else []
         start_date = datetime.utcnow() if not parts or not parts[0].strip() else datetime.strptime(parts[0].strip(), "%d/%m/%Y")
